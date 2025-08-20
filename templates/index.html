@@ -26,7 +26,7 @@
 
         <div class="form-section">
             <h2>Add New License</h2>
-            <form action="{{ url_for('add_license') }}" method="post">
+            <form action="{{ url_for('add_license') }}" method="post" autocomplete="off">
                 <div class="form-grid">
                     <input list="software-presets" name="name" placeholder="Software Name" required>
                     <datalist id="software-presets">
@@ -65,7 +65,7 @@
 
         <div class="search-section">
             <h2>Search Licenses</h2>
-            <form action="{{ url_for('index') }}" method="get">
+            <form action="{{ url_for('index') }}" method="get" autocomplete="off">
                 <input type="text" name="search" placeholder="Search by Software Name or Company..." value="{{ search_query }}">
                 <br><br>
                 <button type="submit" style="background-color: #007bff;">Search</button>
@@ -84,7 +84,7 @@
                 {% for license in licenses %}
                 <tr>
                     <td>{{ license.name }}</td><td>{{ license.category }}</td><td>{{ license.company }}</td><td>{{ license.assigned_to }}</td>
-                    <td>{{ license.license_type }}</td><td>{{ license.serial_number }}</td>
+                    <td>{{ license.license-type }}</td><td>{{ license.serial_number }}</td>
                     <td>{{ license.start_date if license.start_date else 'N/A' }}</td><td>{{ license.end_date if license.end_date else 'N/A' }}</td>
                     <td><a href="{{ url_for('edit_license', license_id=license.id) }}">Edit</a></td>
                 </tr>
