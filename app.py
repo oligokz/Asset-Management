@@ -1,8 +1,9 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, g
+from flask import Flask, render_template, request, redirect, url_for, g, flash
 
 # --- App Configuration ---
 app = Flask(__name__)
+app.secret_key = 'your_very_secret_key_change_this'  # Needed for flash messages
 DATABASE = 'licenses.db'
 
 
@@ -12,7 +13,7 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-        db.row_factory = sqlite3.Row  # Allows accessing columns by name
+        db.row_factory = sqlite3.Row
     return db
 
 
@@ -41,21 +42,26 @@ def index():
     db = get_db()
     search_query = request.args.get('search', '').strip()
 
+    # Fetch presets for dropdowns
+    presets_cursor = db.execute('SELECT preset_type, value FROM presets ORDER BY value ASC')
+    presets_data = presets_cursor.fetchall()
+    presets = {
+        'software': [p['value'] for p in presets_data if p['preset_type'] == 'software'],
+        'company': [p['value'] for p in presets_data if p['preset_type'] == 'company'],
+        'category': [p['value'] for p in presets_data if p['preset_type'] == 'category']
+    }
+
     if search_query:
-        # If there's a search term, filter results by name or company
         cursor = db.execute(
-            'SELECT * FROM licenses WHERE name LIKE ? OR company LIKE ? '
-            'ORDER BY name ASC',
+            'SELECT * FROM licenses WHERE name LIKE ? OR company LIKE ? ORDER BY name ASC',
             ['%' + search_query + '%', '%' + search_query + '%']
         )
     else:
-        # Otherwise, get all licenses
         cursor = db.execute('SELECT * FROM licenses ORDER BY name ASC')
 
     licenses = cursor.fetchall()
-    # Pass search query back to template to keep it in the search box
     return render_template(
-        'index.html', licenses=licenses, search_query=search_query
+        'index.html', licenses=licenses, presets=presets, search_query=search_query
     )
 
 
@@ -63,15 +69,11 @@ def index():
 def add_license():
     """Handles adding a new license to the database."""
     db = get_db()
-
-    # Handle optional date fields, ensuring empty strings become NULL
     start_date = request.form.get('start_date') or None
     end_date = request.form.get('end_date') or None
 
     db.execute(
-        'INSERT INTO licenses (name, category, company, assigned_to, '
-        'license_type, serial_number, start_date, end_date) '
-        'VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO licenses (name, category, company, assigned_to, license_type, serial_number, start_date, end_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
         [
             request.form['name'], request.form['category'],
             request.form['company'], request.form['assigned_to'],
@@ -80,18 +82,50 @@ def add_license():
         ]
     )
     db.commit()
+    flash('License added successfully!', 'success')
     return redirect(url_for('index'))
+
+
+@app.route('/presets', methods=['GET', 'POST'])
+def manage_presets():
+    """Page to add and view presets."""
+    db = get_db()
+    if request.method == 'POST':
+        preset_type = request.form['preset_type']
+        value = request.form['value'].strip()
+        if preset_type and value:
+            try:
+                db.execute(
+                    'INSERT INTO presets (preset_type, value) VALUES (?, ?)',
+                    [preset_type, value]
+                )
+                db.commit()
+                flash(f'Preset "{value}" added successfully!', 'success')
+            except sqlite3.IntegrityError:
+                flash(f'Preset "{value}" already exists.', 'error')
+        return redirect(url_for('manage_presets'))
+
+    presets_cursor = db.execute('SELECT id, preset_type, value FROM presets ORDER BY preset_type, value ASC')
+    all_presets = presets_cursor.fetchall()
+    return render_template('presets.html', presets=all_presets)
+
+
+@app.route('/presets/delete/<int:preset_id>', methods=['POST'])
+def delete_preset(preset_id):
+    """Deletes a preset."""
+    db = get_db()
+    db.execute('DELETE FROM presets WHERE id = ?', [preset_id])
+    db.commit()
+    flash('Preset deleted successfully!', 'success')
+    return redirect(url_for('manage_presets'))
 
 
 # --- Main execution ---
 if __name__ == '__main__':
-    # Initialize the database if the file doesn't exist
     try:
-        # A simple check; in a real app, use a migration tool like Alembic
         with open(DATABASE, 'r'):
             pass
     except FileNotFoundError:
         print("Database not found, initializing...")
         init_db()
-
     app.run(debug=True, host='0.0.0.0')
