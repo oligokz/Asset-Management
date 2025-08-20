@@ -86,6 +86,41 @@ def add_license():
     return redirect(url_for('index'))
 
 
+@app.route('/edit/<int:license_id>')
+def edit_license(license_id):
+    """Shows a form to edit an existing license."""
+    db = get_db()
+    cursor = db.execute('SELECT * FROM licenses WHERE id = ?', [license_id])
+    license_data = cursor.fetchone()
+    if license_data is None:
+        flash('License not found!', 'error')
+        return redirect(url_for('index'))
+    return render_template('edit_license.html', license=license_data)
+
+
+@app.route('/update/<int:license_id>', methods=['POST'])
+def update_license(license_id):
+    """Updates a license in the database."""
+    db = get_db()
+    start_date = request.form.get('start_date') or None
+    end_date = request.form.get('end_date') or None
+
+    db.execute(
+        'UPDATE licenses SET name=?, category=?, company=?, assigned_to=?, '
+        'license_type=?, serial_number=?, start_date=?, end_date=? '
+        'WHERE id = ?',
+        [
+            request.form['name'], request.form['category'],
+            request.form['company'], request.form['assigned_to'],
+            request.form['license_type'], request.form['serial_number'],
+            start_date, end_date, license_id
+        ]
+    )
+    db.commit()
+    flash('License updated successfully!', 'success')
+    return redirect(url_for('index'))
+
+
 @app.route('/presets', methods=['GET', 'POST'])
 def manage_presets():
     """Page to add and view presets."""
