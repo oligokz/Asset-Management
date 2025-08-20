@@ -33,11 +33,6 @@
                         {% for software in presets.software %}<option value="{{ software }}">{% endfor %}
                     </datalist>
 
-                    <input list="category-presets" name="category" placeholder="Category">
-                    <datalist id="category-presets">
-                        {% for category in presets.category %}<option value="{{ category }}">{% endfor %}
-                    </datalist>
-
                     <input list="company-presets" name="company" placeholder="Company / Department">
                     <datalist id="company-presets">
                         {% for company in presets.company %}<option value="{{ company }}">{% endfor %}
@@ -76,15 +71,15 @@
         <table>
             <thead>
                 <tr>
-                    <th>Software Name</th><th>Category</th><th>Company</th><th>Assigned To</th><th>License Type</th>
+                    <th>Software Name</th><th>Company</th><th>Assigned To</th><th>License Type</th>
                     <th>Serial Number</th><th>Start Date</th><th>End Date</th><th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for license in licenses %}
                 <tr>
-                    <td>{{ license.name }}</td><td>{{ license.category }}</td><td>{{ license.company }}</td><td>{{ license.assigned_to }}</td>
-                    <td>{{ license.license-type }}</td><td>{{ license.serial_number }}</td>
+                    <td>{{ license.name }}</td><td>{{ license.company }}</td><td>{{ license.assigned_to }}</td>
+                    <td>{{ license.license_type }}</td><td>{{ license.serial_number }}</td>
                     <td>{{ license.start_date if license.start_date else 'N/A' }}</td><td>{{ license.end_date if license.end_date else 'N/A' }}</td>
                     <td><a href="{{ url_for('edit_license', license_id=license.id) }}">Edit</a></td>
                 </tr>
