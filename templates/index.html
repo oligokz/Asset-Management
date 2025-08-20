@@ -11,11 +11,11 @@
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .form-section { margin-bottom: 2em; padding: 1.5em; border: 1px solid #ddd; border-radius: 5px; }
+        .form-section, .search-section { margin-bottom: 2em; padding: 1.5em; border: 1px solid #ddd; border-radius: 5px; }
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; }
-        input[type=text], select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { grid-column: 1 / -1; padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        button:hover { background-color: #218838; }
+        input[type=text], input[type=date], select { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .add-btn { grid-column: 1 / -1; }
     </style>
 </head>
 <body>
@@ -31,13 +31,30 @@
                     <input type="text" name="company" placeholder="Company / Department">
                     <input type="text" name="assigned_to" placeholder="Assigned User or Workstation">
                     <input type="text" name="serial_number" placeholder="Serial Number (optional)">
-                    <select name="license_type" required>
-                        <option value="Subscription">Subscription</option>
+                    <select name="license_type" id="license_type_select" required>
                         <option value="Perpetual License">Perpetual License</option>
+                        <option value="Subscription">Subscription</option>
                     </select>
+                    <div id="subscription_fields" style="display: none;">
+                        <label for="start_date">Start Date:</label>
+                        <input type="date" name="start_date" id="start_date">
+                    </div>
+                    <div id="subscription_fields_end" style="display: none;">
+                        <label for="end_date">End Date:</label>
+                        <input type="date" name="end_date" id="end_date">
+                    </div>
                 </div>
                 <br>
-                <button type="submit">Add License</button>
+                <button type="submit" class="add-btn">Add License</button>
+            </form>
+        </div>
+
+        <div class="search-section">
+            <h2>Search Licenses</h2>
+            <form action="{{ url_for('index') }}" method="get">
+                <input type="text" name="search" placeholder="Search by Software Name or Company..." value="{{ search_query }}">
+                <br><br>
+                <button type="submit" style="background-color: #007bff;">Search</button>
             </form>
         </div>
 
@@ -51,6 +68,8 @@
                     <th>Assigned To</th>
                     <th>License Type</th>
                     <th>Serial Number</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
                 </tr>
             </thead>
             <tbody>
@@ -62,10 +81,27 @@
                     <td>{{ license.assigned_to }}</td>
                     <td>{{ license.license_type }}</td>
                     <td>{{ license.serial_number }}</td>
+                    <td>{{ license.start_date if license.start_date else 'N/A' }}</td>
+                    <td>{{ license.end_date if license.end_date else 'N/A' }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <script>
+        // JavaScript to show/hide date fields
+        document.getElementById('license_type_select').addEventListener('change', function() {
+            var subscriptionFields = document.getElementById('subscription_fields');
+            var subscriptionFieldsEnd = document.getElementById('subscription_fields_end');
+            if (this.value === 'Subscription') {
+                subscriptionFields.style.display = 'block';
+                subscriptionFieldsEnd.style.display = 'block';
+            } else {
+                subscriptionFields.style.display = 'none';
+                subscriptionFieldsEnd.style.display = 'none';
+            }
+        });
+    </script>
 </body>
 </html>
