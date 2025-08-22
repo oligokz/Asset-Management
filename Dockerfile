@@ -1,17 +1,17 @@
-# Start with a standard Python image based on Debian
-FROM python:3.9
+# Start with a specific Debian 11 (Bullseye) based Python image
+FROM python:3.9-bullseye
 
 # Install system dependencies required for the MS ODBC Driver
-RUN apt-get update && apt-get install -y curl gpg lsb-release
+RUN apt-get update && apt-get install -y curl gpg apt-transport-https
 
 # Add the Microsoft package repository GPG key securely
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 
-# Add the repository source for Debian 12
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod $(lsb_release -cs) main" > /etc/apt/sources.list.d/mssql-release.list
+# Add the repository source for Debian 11
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/11/prod bullseye main" > /etc/apt/sources.list.d/mssql-release.list
 
-# Update package lists again and install the newer driver
-RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18
+# Update package lists again and install the driver
+RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
 
 # Set the working directory inside the container
 WORKDIR /app
