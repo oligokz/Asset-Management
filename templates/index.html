@@ -2,104 +2,60 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Software License Manager</title>
+    <title>Asset Management System</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; margin: 2em; background-color: #f4f4f9; color: #333; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 2em; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        h1, h2 { color: #0056b3; }
+        h1 { color: #0056b3; }
         table { width: 100%; border-collapse: collapse; margin-top: 1em; }
         th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
         th { background-color: #007bff; color: white; }
         tr:nth-child(even) { background-color: #f9f9f9; }
-        .form-section, .search-section { margin-bottom: 2em; padding: 1.5em; border: 1px solid #ddd; border-radius: 5px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1em; }
-        input[type=text], input[type=date], select { width: 100%; padding: 8px; box-sizing: border-box; }
-        button { padding: 10px 15px; background-color: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
-        .add-btn { grid-column: 1 / -1; }
-        .nav-link { margin-bottom: 1em; display: inline-block; }
+        .add-btn { display: inline-block; margin-bottom: 1em; padding: 10px 15px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Software License Manager</h1>
-        <a href="{{ url_for('manage_presets') }}" class="nav-link">Manage Presets</a>
+        <h1>Asset Dashboard</h1>
+        <a href="{{ url_for('add_asset') }}" class="add-btn">Add New Asset</a>
 
-        <div class="form-section">
-            <h2>Add New License</h2>
-            <form action="{{ url_for('add_license') }}" method="post" autocomplete="off">
-                <div class="form-grid">
-                    <input list="software-presets" name="name" placeholder="Software Name" required>
-                    <datalist id="software-presets">
-                        {% for software in presets.software %}<option value="{{ software }}">{% endfor %}
-                    </datalist>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
-                    <input list="company-presets" name="company" placeholder="Company / Department">
-                    <datalist id="company-presets">
-                        {% for company in presets.company %}<option value="{{ company }}">{% endfor %}
-                    </datalist>
-
-                    <input type="text" name="assigned_to" placeholder="Assigned User or Workstation">
-                    <input type="text" name="serial_number" placeholder="Serial Number (optional)">
-                    <select name="license_type" id="license_type_select" required>
-                        <option value="Perpetual License">Perpetual License</option>
-                        <option value="Subscription">Subscription</option>
-                    </select>
-                    <div id="subscription_fields" style="display: none;">
-                        <label for="start_date">Start Date:</label>
-                        <input type="date" name="start_date" id="start_date">
-                    </div>
-                    <div id="subscription_fields_end" style="display: none;">
-                        <label for="end_date">End Date:</label>
-                        <input type="date" name="end_date" id="end_date">
-                    </div>
-                </div>
-                <br>
-                <button type="submit" class="add-btn">Add License</button>
-            </form>
-        </div>
-
-        <div class="search-section">
-            <h2>Search Licenses</h2>
-            <form action="{{ url_for('index') }}" method="get" autocomplete="off">
-                <input type="text" name="search" placeholder="Search by Software Name or Company..." value="{{ search_query }}">
-                <br><br>
-                <button type="submit" style="background-color: #007bff;">Search</button>
-            </form>
-        </div>
-
-        <h2>Current Licenses</h2>
+        <h2>Current Assets</h2>
         <table>
             <thead>
                 <tr>
-                    <th>Software Name</th><th>Company</th><th>Assigned To</th><th>License Type</th>
-                    <th>Serial Number</th><th>Start Date</th><th>End Date</th><th>Action</th>
+                    <th>Asset Tag</th>
+                    <th>Name</th>
+                    <th>Category</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Purchase Date</th>
+                    <th>Cost</th>
+                    <th>Serial Number</th>
                 </tr>
             </thead>
             <tbody>
-                {% for license in licenses %}
+                {% for asset in assets %}
                 <tr>
-                    <td>{{ license.name }}</td><td>{{ license.company }}</td><td>{{ license.assigned_to }}</td>
-                    <td>{{ license.license_type }}</td><td>{{ license.serial_number }}</td>
-                    <td>{{ license.start_date if license.start_date else 'N/A' }}</td><td>{{ license.end_date if license.end_date else 'N/A' }}</td>
-                    <td><a href="{{ url_for('edit_license', license_id=license.id) }}">Edit</a></td>
+                    <td>{{ asset.asset_tag }}</td>
+                    <td>{{ asset.name }}</td>
+                    <td>{{ asset.category }}</td>
+                    <td>{{ asset.status }}</td>
+                    <td>{{ asset.location }}</td>
+                    <td>{{ asset.purchase_date }}</td>
+                    <td>${{ "%.2f"|format(asset.purchase_cost) if asset.purchase_cost else 'N/A' }}</td>
+                    <td>{{ asset.serial_number }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
-
-    <script>
-        document.getElementById('license_type_select').addEventListener('change', function() {
-            var subFields1 = document.getElementById('subscription_fields');
-            var subFields2 = document.getElementById('subscription_fields_end');
-            if (this.value === 'Subscription') {
-                subFields1.style.display = 'block';
-                subFields2.style.display = 'block';
-            } else {
-                subFields1.style.display = 'none';
-                subFields2.style.display = 'none';
-            }
-        });
-    </script>
 </body>
 </html>
