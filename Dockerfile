@@ -1,5 +1,5 @@
-# Start with a specific Debian 11 (Bullseye) based Python image
-FROM python:3.9-bullseye
+# Start with a specific Debian 12 (Bookworm) based Python image
+FROM python:3.12-bookworm
 
 # Install system dependencies
 # "build-essential" is needed to compile pyodbc
@@ -8,11 +8,11 @@ RUN apt-get update && apt-get install -y curl gpg apt-transport-https build-esse
 # Add the Microsoft package repository GPG key securely
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
 
-# Add the repository source for Debian 11
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/11/prod bullseye main" > /etc/apt/sources.list.d/mssql-release.list
+# Add the repository source for Debian 12
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/microsoft-prod.gpg] https://packages.microsoft.com/debian/12/prod bookworm main" > /etc/apt/sources.list.d/mssql-release.list
 
 # Update package lists again and install the driver
-RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql17 unixodbc-dev
+RUN apt-get update && ACCEPT_EULA=Y apt-get install -y msodbcsql18 unixodbc-dev
 
 # Set the working directory inside the container
 WORKDIR /app
