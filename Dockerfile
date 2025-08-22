@@ -1,8 +1,9 @@
 # Start with a specific Debian 11 (Bullseye) based Python image
 FROM python:3.9-bullseye
 
-# Install system dependencies required for the MS ODBC Driver
-RUN apt-get update && apt-get install -y curl gpg apt-transport-https
+# Install system dependencies
+# "build-essential" is needed to compile pyodbc
+RUN apt-get update && apt-get install -y curl gpg apt-transport-https build-essential
 
 # Add the Microsoft package repository GPG key securely
 RUN curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg
